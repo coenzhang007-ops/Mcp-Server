@@ -1,0 +1,31 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: mcp-server-demo
+  main:
+    banner-mode: off
+  ai:
+    mcp:
+      server:
+        name: mcp-server-demo
+        version: 1.0.0
+        type: SYNC
+        stdio: false
+        base-url: http://127.0.0.1:8088
+        sse-endpoint: /sse
+        sse-message-endpoint: /mcp/message
+
+crm:
+  api:
+    base-url: http://192.168.1.65:4000
+    token: "2b386c95-f99e-48a0-a408-17b45a663be8"
+    auth-header-name: authorization
+    auth-prefix: "Bearer "
+
+logging:
+  level:
+    root: ERROR
+    org.springframework.ai: ERROR
+    com.example.mcp: ERROR
