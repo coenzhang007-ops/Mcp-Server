@@ -1,6 +1,6 @@
 package com.example.mcp.config;
 
-import com.example.mcp.service.CustomerMcpService;
+import com.example.mcp.registry.AnnotatedToolRegistry;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,10 +15,10 @@ import java.util.Map;
 @RequestMapping(path = "/mcp", produces = MediaType.APPLICATION_JSON_VALUE)
 public class McpHttpController {
 
-    private final CustomerMcpService customerMcpService;
+    private final AnnotatedToolRegistry annotatedToolRegistry;
 
-    public McpHttpController(CustomerMcpService customerMcpService) {
-        this.customerMcpService = customerMcpService;
+    public McpHttpController(AnnotatedToolRegistry annotatedToolRegistry) {
+        this.annotatedToolRegistry = annotatedToolRegistry;
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -43,20 +43,7 @@ public class McpHttpController {
                 ));
                 case "notifications/initialized" -> success(id, Map.of());
                 case "tools/list" -> success(id, Map.of(
-                        "tools", List.of(Map.of(
-                                "name", "queryCustomerInfoFromCrmTool",
-                                "description", "Call CRM endpoint /manage/customer/mcp/info to query customer information by company name",
-                                "inputSchema", Map.of(
-                                        "type", "object",
-                                        "properties", Map.of(
-                                                "company", Map.of(
-                                                        "type", "string",
-                                                        "description", "Company name"
-                                                )
-                                        ),
-                                        "required", List.of("company")
-                                )
-                        ))
+                        "tools", annotatedToolRegistry.listTools()
                 ));
                 case "tools/call" -> handleToolCall(id, params);
                 default -> error(id, -32601, "Method not found: " + method);
@@ -72,19 +59,19 @@ public class McpHttpController {
                 ? castMap(rawArgs)
                 : Map.of();
 
-        if (!"queryCustomerInfoFromCrmTool".equals(name)) {
-            return error(id, -32602, "Unsupported tool: " + name);
+        Object toolResult;
+        try {
+            toolResult = annotatedToolRegistry.invoke(name, arguments);
+        } catch (IllegalArgumentException e) {
+            return error(id, -32602, e.getMessage());
         }
-
-        String company = arguments.get("company") instanceof String value ? value : null;
-        Map<String, Object> data = customerMcpService.queryCustomerInfo(company);
 
         return success(id, Map.of(
                 "content", List.of(Map.of(
                         "type", "text",
-                        "text", data.toString()
+                        "text", String.valueOf(toolResult)
                 )),
-                "structuredContent", data,
+                "structuredContent", toolResult,
                 "isError", Boolean.FALSE
         ));
     }
