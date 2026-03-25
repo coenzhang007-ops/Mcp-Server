@@ -22,18 +22,15 @@ public class CrmCustomerApiClient {
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
     private final String crmBaseUrl;
-    private final String crmToken;
     private final String authHeaderName;
     private final String authPrefix;
 
     public CrmCustomerApiClient(ObjectMapper objectMapper,
                                 @Value("${crm.api.base-url:http://192.168.1.250:9999/uac}") String crmBaseUrl,
-                                @Value("${crm.api.token:}") String crmToken,
                                 @Value("${crm.api.auth-header-name:authorization}") String authHeaderName,
                                 @Value("${crm.api.auth-prefix:Bearer }") String authPrefix) {
         this.objectMapper = objectMapper;
         this.crmBaseUrl = crmBaseUrl;
-        this.crmToken = crmToken;
         this.authHeaderName = authHeaderName;
         this.authPrefix = authPrefix;
         this.httpClient = HttpClient.newBuilder()
@@ -41,12 +38,12 @@ public class CrmCustomerApiClient {
                 .build();
     }
 
-    public Map<String, Object> queryCustomerInfo(String company) {
+    public Map<String, Object> queryCustomerInfo(String company, String accessToken) {
         try {
-            if (crmToken == null || crmToken.trim().isEmpty()) {
+            if (accessToken == null || accessToken.trim().isEmpty()) {
                 Map<String, Object> result = new LinkedHashMap<>();
                 result.put("success", false);
-                result.put("message", "CRM token 未配置，请先通过 skill 获取并写入 token");
+                result.put("message", "CRM accessToken is required");
                 return result;
             }
 
@@ -58,7 +55,7 @@ public class CrmCustomerApiClient {
                     .GET()
                     .timeout(Duration.ofSeconds(10))
                     .header("Accept", "application/json")
-                    .header(authHeaderName, authPrefix + crmToken)
+                    .header(authHeaderName, authPrefix + accessToken.trim())
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));

@@ -17,7 +17,7 @@ public class CustomerMcpService {
         this.crmCustomerApiClient = crmCustomerApiClient;
     }
 
-    public Map<String, Object> queryCustomerInfo(String company) {
+    public Map<String, Object> queryCustomerInfo(String company, String accessToken) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("tool", "queryCustomerInfoFromCrmTool");
         result.put("timestamp", LocalDateTime.now().toString());
@@ -30,7 +30,14 @@ public class CustomerMcpService {
             return result;
         }
 
-        Map<String, Object> crmResponse = crmCustomerApiClient.queryCustomerInfo(company.trim());
+        if (accessToken == null || accessToken.isBlank()) {
+            result.put("success", false);
+            result.put("message", "accessToken is required");
+            result.put("data", List.of());
+            return result;
+        }
+
+        Map<String, Object> crmResponse = crmCustomerApiClient.queryCustomerInfo(company.trim(), accessToken.trim());
         result.putAll(crmResponse);
         return result;
     }

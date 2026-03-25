@@ -20,7 +20,6 @@ spring:
 crm:
   api:
     base-url: http://192.168.1.65:4000
-    token: "2b386c95-f99e-48a0-a408-17b45a663be8"
     auth-header-name: authorization
     auth-prefix: "Bearer "
 
