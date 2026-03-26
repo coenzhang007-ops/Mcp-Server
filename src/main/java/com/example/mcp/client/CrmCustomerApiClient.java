@@ -6,8 +6,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.URLEncoder;
+import java.net.UnknownHostException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -39,30 +41,36 @@ public class CrmCustomerApiClient {
     }
 
     public Map<String, Object> queryCustomerInfo(String company, String accessToken) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("crmBaseUrl", crmBaseUrl);
+        result.put("authHeaderName", authHeaderName);
+        result.put("authPrefix", authPrefix);
+        result.put("tokenProvided", accessToken != null && !accessToken.trim().isEmpty());
+        result.put("tokenLength", accessToken == null ? 0 : accessToken.trim().length());
+
         try {
             if (accessToken == null || accessToken.trim().isEmpty()) {
-                Map<String, Object> result = new LinkedHashMap<>();
                 result.put("success", false);
                 result.put("message", "CRM accessToken is required");
                 return result;
             }
 
+            String safeToken = accessToken.trim();
             String encodedCompany = URLEncoder.encode(company, StandardCharsets.UTF_8);
             String url = crmBaseUrl + "/manage/customer/mcp/info?company=" + encodedCompany;
+            result.put("requestUrl", url);
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
                     .GET()
                     .timeout(Duration.ofSeconds(10))
                     .header("Accept", "application/json")
-                    .header(authHeaderName, authPrefix + accessToken.trim())
+                    .header(authHeaderName, authPrefix + safeToken)
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-            Map<String, Object> result = new LinkedHashMap<>();
             result.put("httpStatus", response.statusCode());
-            result.put("requestUrl", url);
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 result.put("success", false);
@@ -80,15 +88,44 @@ public class CrmCustomerApiClient {
             return result;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            Map<String, Object> result = new LinkedHashMap<>();
             result.put("success", false);
-            result.put("message", "CRM API request interrupted: " + e.getMessage());
+            result.put("message", "CRM API request interrupted: " + safeMessage(e));
+            result.put("exceptionType", e.getClass().getName());
+            return result;
+        } catch (ConnectException e) {
+            result.put("success", false);
+            result.put("message", "CRM API connect failed: " + safeMessage(e));
+            result.put("exceptionType", e.getClass().getName());
+            return result;
+        } catch (UnknownHostException e) {
+            result.put("success", false);
+            result.put("message", "CRM API unknown host: " + safeMessage(e));
+            result.put("exceptionType", e.getClass().getName());
             return result;
         } catch (IOException e) {
-            Map<String, Object> result = new LinkedHashMap<>();
             result.put("success", false);
-            result.put("message", "CRM API request exception: " + e.getMessage());
+            result.put("message", "CRM API IO exception: " + safeMessage(e));
+            result.put("exceptionType", e.getClass().getName());
+            return result;
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "CRM API unexpected exception: " + safeMessage(e));
+            result.put("exceptionType", e.getClass().getName());
+            if (e.getCause() != null) {
+                result.put("causeType", e.getCause().getClass().getName());
+                result.put("causeMessage", safeMessage(e.getCause()));
+            }
             return result;
         }
+    }
+
+    private String safeMessage(Throwable throwable) {
+        if (throwable == null) {
+            return "unknown";
+        }
+        if (throwable.getMessage() != null && !throwable.getMessage().trim().isEmpty()) {
+            return throwable.getMessage();
+        }
+        return throwable.toString();
     }
 }
