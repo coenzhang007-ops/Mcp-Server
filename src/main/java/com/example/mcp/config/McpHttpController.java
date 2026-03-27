@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping(path = "/rpc/mcp", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "/mcp", produces = MediaType.APPLICATION_JSON_VALUE)
 public class McpHttpController {
 
     private final AnnotatedToolRegistry annotatedToolRegistry;

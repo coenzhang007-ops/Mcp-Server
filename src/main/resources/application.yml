@@ -3,22 +3,14 @@ server:
 
 mcp:
   public-base-url: http://8.147.68.53:8088
+  sse:
+    enabled: false
 
 spring:
   application:
     name: mcp-server-demo
   main:
     banner-mode: off
-  ai:
-    mcp:
-      server:
-        name: mcp-server-demo
-        version: 1.0.0
-        type: SYNC
-        stdio: false
-        base-url: ${mcp.public-base-url}
-        sse-endpoint: /mcp
-        sse-message-endpoint: /mcp
 
 crm:
   api:
