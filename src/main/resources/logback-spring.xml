@@ -7,10 +7,10 @@
         </encoder>
     </appender>
 
-    <root level="ERROR">
+    <root level="DEBUG">
         <appender-ref ref="STDERR"/>
     </root>
 
-    <logger name="org.springframework.ai" level="ERROR"/>
-    <logger name="com.example.mcp" level="ERROR"/>
+    <logger name="org.springframework.ai" level="DEBUG"/>
+    <logger name="com.example.mcp" level="DEBUG"/>
 </configuration>

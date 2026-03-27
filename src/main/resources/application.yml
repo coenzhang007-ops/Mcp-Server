@@ -2,7 +2,7 @@ server:
   port: 8088
 
 mcp:
-  public-base-url: http://8.147.68.53:8088
+  public-base-url: http://127.0.0.1:8088
   sse:
     enabled: false
 
@@ -20,6 +20,6 @@ crm:
 
 logging:
   level:
-    root: ERROR
-    org.springframework.ai: ERROR
-    com.example.mcp: ERROR
+    root: DEBUG
+    org.springframework.ai: DEBUG
+    com.example.mcp: DEBUG
