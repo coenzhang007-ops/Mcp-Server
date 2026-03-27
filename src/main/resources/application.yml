@@ -1,6 +1,9 @@
 server:
   port: 8088
 
+mcp:
+  public-base-url: http://8.147.68.53:8088
+
 spring:
   application:
     name: mcp-server-demo
@@ -13,9 +16,9 @@ spring:
         version: 1.0.0
         type: SYNC
         stdio: false
-        base-url: http://127.0.0.1:8088
-        sse-endpoint: /sse
-        sse-message-endpoint: /mcp/message
+        base-url: ${mcp.public-base-url}
+        sse-endpoint: /mcp
+        sse-message-endpoint: /mcp
 
 crm:
   api:
