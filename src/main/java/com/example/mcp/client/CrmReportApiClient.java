@@ -85,23 +85,28 @@ public class CrmReportApiClient {
                 builder.GET();
             }
 
-            HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            HttpResponse<byte[]> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofByteArray());
             result.put("httpStatus", response.statusCode());
+            result.put("responseHeaders", response.headers().map());
+
+            CrmResponseDecoder.DecodedBody decodedBody = CrmResponseDecoder.decode(response.body(), response.headers());
+            String responseText = decodedBody.text();
+            result.put("decodeDiagnostics", decodedBody.diagnostics());
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 result.put("success", false);
                 result.put("message", "CRM API request failed");
-                result.put("rawBody", response.body());
+                result.put("rawBody", responseText);
                 return result;
             }
 
-            Map<String, Object> parsed = parseJsonObject(response.body());
+            Map<String, Object> parsed = parseJsonObject(responseText);
             result.put("success", true);
             result.put("response", parsed);
             result.put("code", parsed.get("code"));
             result.put("msg", parsed.get("msg"));
             result.put("data", parsed.get("data"));
-            result.put("rawBody", response.body());
+            result.put("rawBody", responseText);
             return result;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

@@ -68,23 +68,27 @@ public class CrmCustomerApiClient {
                     .header(authHeaderName, authPrefix + safeToken)
                     .build();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
+            HttpResponse<byte[]> response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
             result.put("httpStatus", response.statusCode());
+            result.put("responseHeaders", response.headers().map());
+
+            CrmResponseDecoder.DecodedBody decodedBody = CrmResponseDecoder.decode(response.body(), response.headers());
+            String responseText = decodedBody.text();
+            result.put("decodeDiagnostics", decodedBody.diagnostics());
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 result.put("success", false);
                 result.put("message", "CRM API request failed");
-                result.put("rawBody", response.body());
+                result.put("rawBody", responseText);
                 return result;
             }
 
-            JsonNode root = objectMapper.readTree(response.body());
+            JsonNode root = objectMapper.readTree(responseText);
             result.put("success", true);
             result.put("code", root.path("code").asInt());
             result.put("msg", root.path("msg").asText());
             result.put("data", objectMapper.convertValue(root.path("data"), Object.class));
-            result.put("rawBody", response.body());
+            result.put("rawBody", responseText);
             return result;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
