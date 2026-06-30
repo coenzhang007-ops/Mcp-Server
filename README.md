@@ -28,8 +28,9 @@
 
 当前提供工具：
 
-- `queryCustomerInfoFromCrmTool`
+ - `queryCustomerInfoFromCrmTool`
 - 一批 CRM report 相关工具（HomePage / Report / ReportDetail / SalesDataReport / GPReport / OrderMaintenance / StatisticalReport 的查询与部分动作接口）
+- `queryIcOfferListFromCrmTool` — 根据料号查询 IC Offer 报价列表
 
 说明：
 - 本次优先接入了适合 MCP 的 JSON 查询/动作接口
@@ -37,6 +38,7 @@
 - 大部分 report 工具统一采用入参：`{ body: {...}, accessToken: "..." }`
 - 少量纯 GET 工具采用：`{ accessToken: "..." }`
 - 少量带 `type` 查询参数的 GET 工具采用：`{ type: "...", accessToken: "..." }`
+- `queryIcOfferListFromCrmTool` 入参：`{ partNo: "INA236AIDDFR", current: 1, accessToken: "..." }`
 
 ## 启动方式
 
