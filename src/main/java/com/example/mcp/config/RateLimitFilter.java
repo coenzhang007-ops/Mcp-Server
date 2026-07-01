@@ -66,9 +66,21 @@ public class RateLimitFilter implements Filter {
         return request.getRemoteAddr();
     }
 
-    private record SlidingWindow(AtomicLong windowStart, AtomicInteger counter) {
+    private static final class SlidingWindow {
+        private final AtomicLong windowStart;
+        private final AtomicInteger counter;
+
+        SlidingWindow(long startTime, AtomicInteger counter) {
+            this.windowStart = new AtomicLong(startTime);
+            this.counter = counter;
+        }
+
         long windowStart() {
             return windowStart.get();
+        }
+
+        AtomicInteger counter() {
+            return counter;
         }
     }
 }
