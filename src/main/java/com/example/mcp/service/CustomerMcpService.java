@@ -3,13 +3,10 @@ package com.example.mcp.service;
 import com.example.mcp.client.CrmCustomerApiClient;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 @Service
-public class CustomerMcpService {
+public class CustomerMcpService extends BaseMcpService {
 
     private final CrmCustomerApiClient crmCustomerApiClient;
 
@@ -18,16 +15,10 @@ public class CustomerMcpService {
     }
 
     public Map<String, Object> queryCustomerInfo(String company, String accessToken) {
-        Map<String, Object> result = new LinkedHashMap<>();
-        result.put("tool", "queryCustomerInfoFromCrmTool");
-        result.put("timestamp", LocalDateTime.now().toString());
-        result.put("company", company);
+        Map<String, Object> result = newResult("queryCustomerInfoFromCrmTool", company);
 
         if (company == null || company.isBlank()) {
-            result.put("success", false);
-            result.put("message", "company is required");
-            result.put("data", List.of());
-            return result;
+            return failWithEmptyData(result, "company is required");
         }
 
         String token = (accessToken != null) ? accessToken.trim() : null;

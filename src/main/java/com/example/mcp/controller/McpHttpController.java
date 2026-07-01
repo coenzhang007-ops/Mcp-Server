@@ -1,4 +1,4 @@
-package com.example.mcp.config;
+package com.example.mcp.controller;
 
 import com.example.mcp.registry.AnnotatedToolRegistry;
 import org.slf4j.Logger;

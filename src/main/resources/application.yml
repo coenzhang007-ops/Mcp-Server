@@ -1,5 +1,6 @@
 server:
   port: 8088
+  max-http-request-header-size: 8KB
 
 mcp:
   public-base-url: http://127.0.0.1:8088
@@ -11,12 +12,25 @@ spring:
     name: mcp-server-demo
   main:
     banner-mode: off
+  servlet:
+    multipart:
+      max-file-size: 1MB
+      max-request-size: 1MB
 
 crm:
   api:
     base-url: https://api-crm.v-buy.com/uac
     auth-header-name: authorization
     auth-prefix: "Bearer "
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
 
 logging:
   level:
