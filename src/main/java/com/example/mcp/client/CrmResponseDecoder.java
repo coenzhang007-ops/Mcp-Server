@@ -10,6 +10,8 @@ import java.util.Optional;
 
 public final class CrmResponseDecoder {
 
+    private static final Charset GBK = Charset.forName("GBK");
+
     private CrmResponseDecoder() {
     }
 
@@ -50,7 +52,7 @@ public final class CrmResponseDecoder {
             return new DecodedBody(utf8Text, diagnostics);
         }
 
-        String gbkText = new String(bodyBytes, Charset.forName("GBK"));
+        String gbkText = new String(bodyBytes, GBK);
         boolean gbkLooksBroken = looksLikeMojibake(gbkText);
         diagnostics.put("gbkLooksBroken", gbkLooksBroken);
 

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
+import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
@@ -17,11 +18,12 @@ import java.util.Map;
 @Component
 public class CrmCustomerApiClient extends BaseCrmApiClient {
 
-    public CrmCustomerApiClient(ObjectMapper objectMapper,
+    public CrmCustomerApiClient(HttpClient httpClient,
+                                ObjectMapper objectMapper,
                                 @Value("${crm.api.base-url:https://api-crm.v-buy.com/uac}") String crmBaseUrl,
                                 @Value("${crm.api.auth-header-name:authorization}") String authHeaderName,
                                 @Value("${crm.api.auth-prefix:Bearer }") String authPrefix) {
-        super(objectMapper, crmBaseUrl, authHeaderName, authPrefix);
+        super(httpClient, objectMapper, crmBaseUrl, authHeaderName, authPrefix);
     }
 
     public Map<String, Object> queryCustomerInfo(String company, String accessToken) {

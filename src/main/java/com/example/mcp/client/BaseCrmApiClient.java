@@ -19,17 +19,16 @@ public abstract class BaseCrmApiClient {
     protected final String authHeaderName;
     protected final String authPrefix;
 
-    protected BaseCrmApiClient(ObjectMapper objectMapper,
+    protected BaseCrmApiClient(HttpClient httpClient,
+                               ObjectMapper objectMapper,
                                @Value("${crm.api.base-url:https://api-crm.v-buy.com/uac}") String crmBaseUrl,
                                @Value("${crm.api.auth-header-name:authorization}") String authHeaderName,
                                @Value("${crm.api.auth-prefix:Bearer }") String authPrefix) {
+        this.httpClient = httpClient;
         this.objectMapper = objectMapper;
         this.crmBaseUrl = crmBaseUrl;
         this.authHeaderName = authHeaderName;
         this.authPrefix = authPrefix;
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(5))
-                .build();
     }
 
     /**
