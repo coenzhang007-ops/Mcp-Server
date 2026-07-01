@@ -30,7 +30,7 @@ public class McpExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneral(Exception e) {
-        log.warn("Unexpected error: {}", e.getMessage());
+        log.error("Unexpected error: {}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(errorResponse("Internal server error"));
     }

@@ -16,13 +16,9 @@ public class CustomerMcpService extends BaseMcpService {
 
     public Map<String, Object> queryCustomerInfo(String company, String accessToken) {
         Map<String, Object> result = newResult("queryCustomerInfoFromCrmTool", company);
-
-        if (company == null || company.isBlank()) {
-            return failWithEmptyData(result, "company is required");
-        }
-
         String token = (accessToken != null) ? accessToken.trim() : null;
-        Map<String, Object> crmResponse = crmCustomerApiClient.queryCustomerInfo(company.trim(), token);
+        Map<String, Object> crmResponse = crmCustomerApiClient.queryCustomerInfo(
+                company != null ? company.trim() : null, token);
         result.putAll(crmResponse);
         return result;
     }

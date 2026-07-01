@@ -22,6 +22,7 @@ crm:
     base-url: https://api-crm.v-buy.com/uac
     auth-header-name: authorization
     auth-prefix: "Bearer "
+    request-timeout-seconds: 10
 
 mcp-server:
   api-key: ${MCP_API_KEY:changeme}

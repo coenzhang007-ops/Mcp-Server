@@ -6,10 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.net.ConnectException;
 import java.net.URLEncoder;
-import java.net.UnknownHostException;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
@@ -29,9 +26,9 @@ public class IcOfferApiClient extends BaseCrmApiClient {
     }
 
     public Map<String, Object> queryIcOfferList(String partNo, int current, int size, String accessToken) {
-        Map<String, Object> result = new LinkedHashMap<>();
+        return executeWithExceptionHandling(() -> {
+            Map<String, Object> result = new LinkedHashMap<>();
 
-        try {
             if (partNo == null || partNo.trim().isEmpty()) {
                 result.put("success", false);
                 result.put("message", "partNo is required");
@@ -46,7 +43,8 @@ public class IcOfferApiClient extends BaseCrmApiClient {
             int safeCurrent = Math.max(1, current);
 
             String encodedPartNo = URLEncoder.encode(partNo.trim(), StandardCharsets.UTF_8);
-            String url = crmBaseUrl + "/customer/ic/offer/list?partNo=" + encodedPartNo + "&size=" + safeSize + "&current=" + safeCurrent;
+            String url = crmBaseUrl + "/customer/ic/offer/list?partNo=" + encodedPartNo
+                    + "&size=" + safeSize + "&current=" + safeCurrent;
 
             HttpResponse<byte[]> response = httpClient.send(
                     buildGetRequest(url, accessToken).build(),
@@ -72,29 +70,6 @@ public class IcOfferApiClient extends BaseCrmApiClient {
             result.put("msg", root.path("msg").asText());
             result.put("data", objectMapper.convertValue(root.path("data"), Object.class));
             return result;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            result.put("success", false);
-            result.put("message", "CRM API request interrupted: " + safeMessage(e));
-            result.put("exceptionType", e.getClass().getName());
-            return result;
-        } catch (ConnectException e) {
-            log.warn("CRM API 连接失败, partNo={}", partNo, e);
-            return exceptionResult(result, "CRM API connect failed", e);
-        } catch (UnknownHostException e) {
-            log.warn("CRM API 未知主机, partNo={}", partNo, e);
-            return exceptionResult(result, "CRM API unknown host", e);
-        } catch (IOException e) {
-            log.error("CRM API IO异常, partNo={}", partNo, e);
-            return exceptionResult(result, "CRM API IO exception", e);
-        } catch (Exception e) {
-            log.error("CRM API 未预期异常, partNo={}", partNo, e);
-            result = exceptionResult(result, "CRM API unexpected exception", e);
-            if (e.getCause() != null) {
-                result.put("causeType", e.getCause().getClass().getName());
-                result.put("causeMessage", safeMessage(e.getCause()));
-            }
-            return result;
-        }
+        }, "CRM API", "partNo", partNo, log);
     }
 }

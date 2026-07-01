@@ -6,10 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.net.ConnectException;
 import java.net.URLEncoder;
-import java.net.UnknownHostException;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
@@ -29,9 +26,9 @@ public class CrmCustomerApiClient extends BaseCrmApiClient {
     }
 
     public Map<String, Object> queryCustomerInfo(String company, String accessToken) {
-        Map<String, Object> result = new LinkedHashMap<>();
+        return executeWithExceptionHandling(() -> {
+            Map<String, Object> result = new LinkedHashMap<>();
 
-        try {
             if (company == null || company.isBlank()) {
                 result.put("success", false);
                 result.put("message", "company is required");
@@ -69,29 +66,6 @@ public class CrmCustomerApiClient extends BaseCrmApiClient {
             result.put("msg", root.path("msg").asText());
             result.put("data", objectMapper.convertValue(root.path("data"), Object.class));
             return result;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            result.put("success", false);
-            result.put("message", "CRM API request interrupted: " + safeMessage(e));
-            result.put("exceptionType", e.getClass().getName());
-            return result;
-        } catch (ConnectException e) {
-            log.warn("CRM API 连接失败, company={}", company, e);
-            return exceptionResult(result, "CRM API connect failed", e);
-        } catch (UnknownHostException e) {
-            log.warn("CRM API 未知主机, company={}", company, e);
-            return exceptionResult(result, "CRM API unknown host", e);
-        } catch (IOException e) {
-            log.error("CRM API IO异常, company={}", company, e);
-            return exceptionResult(result, "CRM API IO exception", e);
-        } catch (Exception e) {
-            log.error("CRM API 未预期异常, company={}", company, e);
-            result = exceptionResult(result, "CRM API unexpected exception", e);
-            if (e.getCause() != null) {
-                result.put("causeType", e.getCause().getClass().getName());
-                result.put("causeMessage", safeMessage(e.getCause()));
-            }
-            return result;
-        }
+        }, "CRM API", "company", company, log);
     }
 }
