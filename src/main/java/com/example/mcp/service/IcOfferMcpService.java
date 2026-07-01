@@ -23,12 +23,4 @@ public class IcOfferMcpService extends BaseMcpService {
         return result;
     }
 
-    public Map<String, Object> queryIcRfqList(String partNo, int current, int size, String accessToken) {
-        Map<String, Object> result = newResult("queryIcRfqListFromCrmTool", partNo);
-        String token = (accessToken != null) ? accessToken.trim() : null;
-        Map<String, Object> crmResponse = icOfferApiClient.queryIcRfqList(
-                partNo != null ? partNo.trim() : null, current, size, token);
-        result.putAll(crmResponse);
-        return result;
-    }
 }

@@ -15,32 +15,36 @@ import java.util.Map;
 
 @Slf4j
 @Component
-public class CrmCustomerApiClient extends BaseCrmApiClient {
+public class IcRfqApiClient extends BaseCrmApiClient {
 
-    public CrmCustomerApiClient(HttpClient httpClient,
-                                ObjectMapper objectMapper,
-                                @Value("${crm.api.base-url:https://api-crm.v-buy.com/uac}") String crmBaseUrl,
-                                @Value("${crm.api.auth-header-name:authorization}") String authHeaderName,
-                                @Value("${crm.api.auth-prefix:Bearer }") String authPrefix) {
+    public IcRfqApiClient(HttpClient httpClient,
+                          ObjectMapper objectMapper,
+                          @Value("${crm.api.base-url:https://api-crm.v-buy.com/uac}") String crmBaseUrl,
+                          @Value("${crm.api.auth-header-name:authorization}") String authHeaderName,
+                          @Value("${crm.api.auth-prefix:Bearer }") String authPrefix) {
         super(httpClient, objectMapper, crmBaseUrl, authHeaderName, authPrefix);
     }
 
-    public Map<String, Object> queryCustomerInfo(String company, String accessToken) {
+    public Map<String, Object> queryIcRfqList(String partNo, int current, int size, String accessToken) {
         return executeWithExceptionHandling(() -> {
             Map<String, Object> result = new LinkedHashMap<>();
 
-            if (company == null || company.isBlank()) {
+            if (partNo == null || partNo.trim().isEmpty()) {
                 result.put("success", false);
-                result.put("message", "company is required");
+                result.put("message", "partNo is required");
                 return result;
             }
-            if (company.length() > 200) {
+            if (partNo.trim().length() > 100) {
                 result.put("success", false);
-                result.put("message", "company name too long, max 200 characters");
+                result.put("message", "partNo too long, max 100 characters");
                 return result;
             }
-            String encodedCompany = URLEncoder.encode(company.trim(), StandardCharsets.UTF_8);
-            String url = crmBaseUrl + "/mcp/none/customer/list?company=" + encodedCompany;
+            int safeSize = Math.max(20, Math.min(size, 100));
+            int safeCurrent = Math.max(1, current);
+
+            String encodedPartNo = URLEncoder.encode(partNo.trim(), StandardCharsets.UTF_8);
+            String url = crmBaseUrl + "/mcp/none/ic/rfq/list?partNo=" + encodedPartNo
+                    + "&size=" + safeSize + "&current=" + safeCurrent;
 
             HttpResponse<byte[]> response = httpClient.send(
                     buildGetRequest(url, accessToken).build(),
@@ -49,7 +53,7 @@ public class CrmCustomerApiClient extends BaseCrmApiClient {
 
             CrmResponseDecoder.DecodedBody decodedBody = CrmResponseDecoder.decode(response.body(), response.headers());
             String responseText = decodedBody.text();
-            log.info("查询客户：{}, HTTP状态码：{}, 响应长度：{}", company, response.statusCode(), responseText.length());
+            log.info("请求型号：{}, HTTP状态码：{}, 响应长度：{}", partNo, response.statusCode(), responseText.length());
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 String trimmedBody = responseText.length() > 500 ? responseText.substring(0, 500) : responseText;
@@ -66,6 +70,6 @@ public class CrmCustomerApiClient extends BaseCrmApiClient {
             result.put("msg", root.path("msg").asText());
             result.put("data", objectMapper.convertValue(root.path("data"), Object.class));
             return result;
-        }, "CRM API", "company", company, log);
+        }, "CRM API", "partNo", partNo, log);
     }
 }

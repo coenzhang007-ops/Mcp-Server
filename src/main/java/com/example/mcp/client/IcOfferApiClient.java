@@ -43,7 +43,7 @@ public class IcOfferApiClient extends BaseCrmApiClient {
             int safeCurrent = Math.max(1, current);
 
             String encodedPartNo = URLEncoder.encode(partNo.trim(), StandardCharsets.UTF_8);
-            String url = crmBaseUrl + "/ic/offer/mcp/list?partNo=" + encodedPartNo
+            String url = crmBaseUrl + "/mcp/none/ic/offer/list?partNo=" + encodedPartNo
                     + "&size=" + safeSize + "&current=" + safeCurrent;
 
             HttpResponse<byte[]> response = httpClient.send(
@@ -91,7 +91,7 @@ public class IcOfferApiClient extends BaseCrmApiClient {
             int safeCurrent = Math.max(1, current);
 
             String encodedPartNo = URLEncoder.encode(partNo.trim(), StandardCharsets.UTF_8);
-            String url = crmBaseUrl + "/ic/rfq/mcp/list?partNo=" + encodedPartNo
+            String url = crmBaseUrl + "/mcp/none/ic/rfq/list?partNo=" + encodedPartNo
                     + "&size=" + safeSize + "&current=" + safeCurrent;
 
             HttpResponse<byte[]> response = httpClient.send(
