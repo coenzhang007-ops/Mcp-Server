@@ -1,4 +1,4 @@
-package com.example.mcp.config;
+package com.example.mcp.handler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
