@@ -4,6 +4,8 @@ import com.example.mcp.annotation.McpToolDef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Constructor;
@@ -15,18 +17,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component
-public class AnnotatedToolRegistry {
+public class AnnotatedToolRegistry implements ApplicationListener<ContextRefreshedEvent> {
 
     private static final Logger log = LoggerFactory.getLogger(AnnotatedToolRegistry.class);
     private static final String ALLOWED_TOOL_PACKAGE = "com.example.mcp.tool";
 
+    private final ListableBeanFactory beanFactory;
     private final List<RegisteredTool> tools = new ArrayList<>();
     private final Map<String, RegisteredTool> toolIndex = new ConcurrentHashMap<>();
     private final Map<Class<?>, Constructor<?>> constructorCache = new ConcurrentHashMap<>();
+    private final AtomicBoolean scanned = new AtomicBoolean(false);
 
     public AnnotatedToolRegistry(ListableBeanFactory beanFactory) {
+        this.beanFactory = beanFactory;
+    }
+
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+        if (event.getApplicationContext().getParent() != null) {
+            return;
+        }
+        if (!scanned.compareAndSet(false, true)) {
+            return;
+        }
         beanFactory.getBeansWithAnnotation(Component.class)
                 .forEach((beanName, bean) -> scanBean(bean));
         log.info("Registered {} MCP tools: {}", tools.size(),
