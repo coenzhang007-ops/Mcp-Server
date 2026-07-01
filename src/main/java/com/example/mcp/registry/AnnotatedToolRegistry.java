@@ -13,6 +13,8 @@ import java.util.Map;
 @Component
 public class AnnotatedToolRegistry {
 
+    private static final String ALLOWED_TOOL_PACKAGE = "com.example.mcp.tool";
+
     private final List<RegisteredTool> tools = new ArrayList<>();
 
     public AnnotatedToolRegistry(ListableBeanFactoryProvider beanFactoryProvider) {
@@ -21,12 +23,21 @@ public class AnnotatedToolRegistry {
 
     private void scanBean(Object bean) {
         Class<?> targetClass = bean.getClass();
+        if (!targetClass.getPackageName().startsWith(ALLOWED_TOOL_PACKAGE)) {
+            return;
+        }
         for (Method method : targetClass.getMethods()) {
             McpToolDef annotation = method.getAnnotation(McpToolDef.class);
             if (annotation == null) {
                 continue;
             }
             validateMethod(method, annotation);
+            Class<?> inputType = method.getParameterTypes()[0];
+            if (!inputType.getPackageName().startsWith(ALLOWED_TOOL_PACKAGE)) {
+                throw new IllegalStateException(
+                        "@McpToolDef input type must be in package " + ALLOWED_TOOL_PACKAGE
+                        + ": " + inputType.getName());
+            }
             tools.add(new RegisteredTool(bean, method, annotation.name(), annotation.description()));
         }
     }

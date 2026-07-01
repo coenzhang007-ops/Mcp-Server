@@ -8,38 +8,22 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.ConnectException;
-import java.net.URI;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Slf4j
 @Component
-public class IcOfferApiClient {
-
-    private final HttpClient httpClient;
-    private final ObjectMapper objectMapper;
-    private final String crmBaseUrl;
-    private final String authHeaderName;
-    private final String authPrefix;
+public class IcOfferApiClient extends BaseCrmApiClient {
 
     public IcOfferApiClient(ObjectMapper objectMapper,
                             @Value("${crm.api.base-url:https://api-crm.v-buy.com/uac}") String crmBaseUrl,
                             @Value("${crm.api.auth-header-name:authorization}") String authHeaderName,
                             @Value("${crm.api.auth-prefix:Bearer }") String authPrefix) {
-        this.objectMapper = objectMapper;
-        this.crmBaseUrl = crmBaseUrl;
-        this.authHeaderName = authHeaderName;
-        this.authPrefix = authPrefix;
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(5))
-                .build();
+        super(objectMapper, crmBaseUrl, authHeaderName, authPrefix);
     }
 
     public Map<String, Object> queryIcOfferList(String partNo, int current, int size, String accessToken) {
@@ -56,22 +40,15 @@ public class IcOfferApiClient {
                 result.put("message", "partNo too long, max 100 characters");
                 return result;
             }
-            int safeSize = Math.max(1, Math.min(size, 100));
+            int safeSize = Math.max(20, Math.min(size, 100));
             int safeCurrent = Math.max(1, current);
 
-            String safeToken = (accessToken != null) ? accessToken.trim() : "";
             String encodedPartNo = URLEncoder.encode(partNo.trim(), StandardCharsets.UTF_8);
             String url = crmBaseUrl + "/customer/ic/offer/list?partNo=" + encodedPartNo + "&size=" + safeSize + "&current=" + safeCurrent;
 
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .GET()
-                    .timeout(Duration.ofSeconds(10))
-                    .header("Accept", "application/json")
-                    .header(authHeaderName, authPrefix + safeToken)
-                    .build();
-
-            HttpResponse<byte[]> response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+            HttpResponse<byte[]> response = httpClient.send(
+                    buildGetRequest(url, accessToken).build(),
+                    HttpResponse.BodyHandlers.ofByteArray());
             result.put("httpStatus", response.statusCode());
 
             CrmResponseDecoder.DecodedBody decodedBody = CrmResponseDecoder.decode(response.body(), response.headers());
@@ -97,39 +74,18 @@ public class IcOfferApiClient {
             result.put("exceptionType", e.getClass().getName());
             return result;
         } catch (ConnectException e) {
-            result.put("success", false);
-            result.put("message", "CRM API connect failed: " + safeMessage(e));
-            result.put("exceptionType", e.getClass().getName());
-            return result;
+            return exceptionResult(result, "CRM API connect failed", e);
         } catch (UnknownHostException e) {
-            result.put("success", false);
-            result.put("message", "CRM API unknown host: " + safeMessage(e));
-            result.put("exceptionType", e.getClass().getName());
-            return result;
+            return exceptionResult(result, "CRM API unknown host", e);
         } catch (IOException e) {
-            result.put("success", false);
-            result.put("message", "CRM API IO exception: " + safeMessage(e));
-            result.put("exceptionType", e.getClass().getName());
-            return result;
+            return exceptionResult(result, "CRM API IO exception", e);
         } catch (Exception e) {
-            result.put("success", false);
-            result.put("message", "CRM API unexpected exception: " + safeMessage(e));
-            result.put("exceptionType", e.getClass().getName());
+            result = exceptionResult(result, "CRM API unexpected exception", e);
             if (e.getCause() != null) {
                 result.put("causeType", e.getCause().getClass().getName());
                 result.put("causeMessage", safeMessage(e.getCause()));
             }
             return result;
         }
-    }
-
-    private String safeMessage(Throwable throwable) {
-        if (throwable == null) {
-            return "unknown";
-        }
-        if (throwable.getMessage() != null && !throwable.getMessage().trim().isEmpty()) {
-            return throwable.getMessage();
-        }
-        return throwable.toString();
     }
 }
