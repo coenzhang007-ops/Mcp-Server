@@ -20,6 +20,6 @@ crm:
 
 logging:
   level:
-    root: DEBUG
-    org.springframework.ai: DEBUG
-    com.example.mcp: DEBUG
+    root: WARN
+    org.springframework.ai: WARN
+    com.example.mcp: INFO

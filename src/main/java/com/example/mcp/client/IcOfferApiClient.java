@@ -51,10 +51,17 @@ public class IcOfferApiClient {
                 result.put("message", "partNo is required");
                 return result;
             }
+            if (partNo.trim().length() > 100) {
+                result.put("success", false);
+                result.put("message", "partNo too long, max 100 characters");
+                return result;
+            }
+            int safeSize = Math.max(1, Math.min(size, 100));
+            int safeCurrent = Math.max(1, current);
 
             String safeToken = (accessToken != null) ? accessToken.trim() : "";
             String encodedPartNo = URLEncoder.encode(partNo.trim(), StandardCharsets.UTF_8);
-            String url = crmBaseUrl + "/customer/ic/offer/list?partNo=" + encodedPartNo + "&size=" + size + "&current=" + current;
+            String url = crmBaseUrl + "/customer/ic/offer/list?partNo=" + encodedPartNo + "&size=" + safeSize + "&current=" + safeCurrent;
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -69,7 +76,7 @@ public class IcOfferApiClient {
 
             CrmResponseDecoder.DecodedBody decodedBody = CrmResponseDecoder.decode(response.body(), response.headers());
             String responseText = decodedBody.text();
-            log.info("请求型号：{}, HTTP状态码：{}, 响应结果：{}", partNo, response.statusCode(), responseText);
+            log.info("请求型号：{}, HTTP状态码：{}, 响应长度：{}", partNo, response.statusCode(), responseText.length());
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 result.put("success", false);

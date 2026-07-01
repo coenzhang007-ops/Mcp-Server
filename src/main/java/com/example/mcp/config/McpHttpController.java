@@ -54,7 +54,7 @@ public class McpHttpController {
             };
         } catch (Exception e) {
             log.error("MCP request failed: method={}, id={}", method, id, e);
-            return error(id, -32603, e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
+            return error(id, -32603, "Internal server error");
         }
     }
 

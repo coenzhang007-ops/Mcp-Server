@@ -44,8 +44,18 @@ public class CrmCustomerApiClient {
         Map<String, Object> result = new LinkedHashMap<>();
 
         try {
+            if (company == null || company.isBlank()) {
+                result.put("success", false);
+                result.put("message", "company is required");
+                return result;
+            }
+            if (company.length() > 100) {
+                result.put("success", false);
+                result.put("message", "company name too long, max 100 characters");
+                return result;
+            }
             String safeToken = (accessToken != null) ? accessToken.trim() : "";
-            String encodedCompany = URLEncoder.encode(company, StandardCharsets.UTF_8);
+            String encodedCompany = URLEncoder.encode(company.trim(), StandardCharsets.UTF_8);
             String url = crmBaseUrl + "/manage/customer/mcp/info?company=" + encodedCompany;
 
             HttpRequest request = HttpRequest.newBuilder()
