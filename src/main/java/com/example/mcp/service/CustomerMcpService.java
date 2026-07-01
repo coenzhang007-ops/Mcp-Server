@@ -30,14 +30,8 @@ public class CustomerMcpService {
             return result;
         }
 
-        if (accessToken == null || accessToken.isBlank()) {
-            result.put("success", false);
-            result.put("message", "accessToken is required");
-            result.put("data", List.of());
-            return result;
-        }
-
-        Map<String, Object> crmResponse = crmCustomerApiClient.queryCustomerInfo(company.trim(), accessToken.trim());
+        String token = (accessToken != null) ? accessToken.trim() : null;
+        Map<String, Object> crmResponse = crmCustomerApiClient.queryCustomerInfo(company.trim(), token);
         result.putAll(crmResponse);
         return result;
     }

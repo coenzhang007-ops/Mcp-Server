@@ -31,14 +31,8 @@ public class IcOfferMcpService {
             return result;
         }
 
-        if (accessToken == null || accessToken.isBlank()) {
-            result.put("success", false);
-            result.put("message", "accessToken is required");
-            result.put("data", List.of());
-            return result;
-        }
-
-        Map<String, Object> crmResponse = icOfferApiClient.queryIcOfferList(partNo.trim(), current, size, accessToken.trim());
+        String token = (accessToken != null) ? accessToken.trim() : null;
+        Map<String, Object> crmResponse = icOfferApiClient.queryIcOfferList(partNo.trim(), current, size, token);
         result.putAll(crmResponse);
         return result;
     }

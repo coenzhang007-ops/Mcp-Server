@@ -44,13 +44,7 @@ public class CrmCustomerApiClient {
         Map<String, Object> result = new LinkedHashMap<>();
 
         try {
-            if (accessToken == null || accessToken.trim().isEmpty()) {
-                result.put("success", false);
-                result.put("message", "CRM accessToken is required");
-                return result;
-            }
-
-            String safeToken = accessToken.trim();
+            String safeToken = (accessToken != null) ? accessToken.trim() : "";
             String encodedCompany = URLEncoder.encode(company, StandardCharsets.UTF_8);
             String url = crmBaseUrl + "/manage/customer/mcp/info?company=" + encodedCompany;
 
