@@ -17,7 +17,7 @@ public class IcOfferMcpService {
         this.icOfferApiClient = icOfferApiClient;
     }
 
-    public Map<String, Object> queryIcOfferList(String partNo, int current, String accessToken) {
+    public Map<String, Object> queryIcOfferList(String partNo, int current, int size, String accessToken) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("tool", "queryIcOfferListFromCrmTool");
         result.put("timestamp", LocalDateTime.now().toString());
@@ -38,7 +38,7 @@ public class IcOfferMcpService {
             return result;
         }
 
-        Map<String, Object> crmResponse = icOfferApiClient.queryIcOfferList(partNo.trim(), current, accessToken.trim());
+        Map<String, Object> crmResponse = icOfferApiClient.queryIcOfferList(partNo.trim(), current, size, accessToken.trim());
         result.putAll(crmResponse);
         return result;
     }

@@ -2,6 +2,7 @@ package com.example.mcp.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +19,7 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@Slf4j
 @Component
 public class IcOfferApiClient {
 
@@ -28,7 +30,7 @@ public class IcOfferApiClient {
     private final String authPrefix;
 
     public IcOfferApiClient(ObjectMapper objectMapper,
-                            @Value("${crm.api.base-url:http://192.168.1.250:9999/uac}") String crmBaseUrl,
+                            @Value("${crm.api.base-url:https://api-crm.v-buy.com/uac}") String crmBaseUrl,
                             @Value("${crm.api.auth-header-name:authorization}") String authHeaderName,
                             @Value("${crm.api.auth-prefix:Bearer }") String authPrefix) {
         this.objectMapper = objectMapper;
@@ -40,7 +42,7 @@ public class IcOfferApiClient {
                 .build();
     }
 
-    public Map<String, Object> queryIcOfferList(String partNo, int current, String accessToken) {
+    public Map<String, Object> queryIcOfferList(String partNo, int current, int size, String accessToken) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("crmBaseUrl", crmBaseUrl);
         result.put("authHeaderName", authHeaderName);
@@ -63,7 +65,7 @@ public class IcOfferApiClient {
 
             String safeToken = accessToken.trim();
             String encodedPartNo = URLEncoder.encode(partNo.trim(), StandardCharsets.UTF_8);
-            String url = crmBaseUrl + "/customer/ic/offer/list?partNo=" + encodedPartNo + "&current=" + current;
+            String url = crmBaseUrl + "/customer/ic/offer/list?partNo=" + encodedPartNo + "&size=" + size + "&current=" + current;
             result.put("requestUrl", url);
 
             HttpRequest request = HttpRequest.newBuilder()
@@ -81,6 +83,7 @@ public class IcOfferApiClient {
             CrmResponseDecoder.DecodedBody decodedBody = CrmResponseDecoder.decode(response.body(), response.headers());
             String responseText = decodedBody.text();
             result.put("decodeDiagnostics", decodedBody.diagnostics());
+            log.info("请求型号：{}, 响应结果：{}", partNo, responseText);
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 result.put("success", false);

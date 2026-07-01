@@ -28,7 +28,7 @@ public class CrmCustomerApiClient {
     private final String authPrefix;
 
     public CrmCustomerApiClient(ObjectMapper objectMapper,
-                                @Value("${crm.api.base-url:http://192.168.1.250:9999/uac}") String crmBaseUrl,
+                                @Value("${crm.api.base-url:https://api-crm.v-buy.com/uac}") String crmBaseUrl,
                                 @Value("${crm.api.auth-header-name:authorization}") String authHeaderName,
                                 @Value("${crm.api.auth-prefix:Bearer }") String authPrefix) {
         this.objectMapper = objectMapper;
