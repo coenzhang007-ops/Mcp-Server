@@ -13,6 +13,7 @@ public class CrmHttpClientConfig {
     public HttpClient crmHttpClient() {
         return HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
+                .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
     }
 }

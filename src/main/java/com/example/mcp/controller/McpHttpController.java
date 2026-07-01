@@ -1,8 +1,10 @@
 package com.example.mcp.controller;
 
 import com.example.mcp.registry.AnnotatedToolRegistry;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,13 +22,23 @@ public class McpHttpController {
     private static final Logger log = LoggerFactory.getLogger(McpHttpController.class);
 
     private final AnnotatedToolRegistry annotatedToolRegistry;
+    private final String apiKey;
 
-    public McpHttpController(AnnotatedToolRegistry annotatedToolRegistry) {
+    public McpHttpController(AnnotatedToolRegistry annotatedToolRegistry,
+                             @Value("${mcp-server.api-key:changeme}") String apiKey) {
         this.annotatedToolRegistry = annotatedToolRegistry;
+        this.apiKey = apiKey;
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, Object> handle(@RequestBody Map<String, Object> request) {
+    public Map<String, Object> handle(@RequestBody Map<String, Object> request,
+                                       HttpServletRequest httpRequest) {
+        String requestApiKey = httpRequest.getHeader("X-API-Key");
+        if (requestApiKey == null || !requestApiKey.equals(apiKey)) {
+            log.warn("Invalid or missing API key from IP: {}", httpRequest.getRemoteAddr());
+            return error(null, -32001, "Unauthorized: invalid or missing API key");
+        }
+
         Object id = request.get("id");
         String method = request.get("method") instanceof String value ? value : null;
         Map<String, Object> params = request.get("params") instanceof Map<?, ?> rawParams

@@ -58,8 +58,11 @@ public class IcOfferApiClient extends BaseCrmApiClient {
             log.info("请求型号：{}, HTTP状态码：{}, 响应长度：{}", partNo, response.statusCode(), responseText.length());
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                String trimmedBody = responseText.length() > 500 ? responseText.substring(0, 500) : responseText;
+                log.warn("CRM API 返回非2xx状态码：{}，响应体前500字符：{}", response.statusCode(), trimmedBody);
                 result.put("success", false);
-                result.put("message", "CRM API request failed");
+                result.put("message", "CRM API request failed, status=" + response.statusCode());
+                result.put("responseBody", trimmedBody);
                 return result;
             }
 
@@ -76,12 +79,16 @@ public class IcOfferApiClient extends BaseCrmApiClient {
             result.put("exceptionType", e.getClass().getName());
             return result;
         } catch (ConnectException e) {
+            log.warn("CRM API 连接失败, partNo={}", partNo, e);
             return exceptionResult(result, "CRM API connect failed", e);
         } catch (UnknownHostException e) {
+            log.warn("CRM API 未知主机, partNo={}", partNo, e);
             return exceptionResult(result, "CRM API unknown host", e);
         } catch (IOException e) {
+            log.error("CRM API IO异常, partNo={}", partNo, e);
             return exceptionResult(result, "CRM API IO exception", e);
         } catch (Exception e) {
+            log.error("CRM API 未预期异常, partNo={}", partNo, e);
             result = exceptionResult(result, "CRM API unexpected exception", e);
             if (e.getCause() != null) {
                 result.put("causeType", e.getCause().getClass().getName());

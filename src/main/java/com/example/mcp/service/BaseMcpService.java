@@ -1,6 +1,6 @@
 package com.example.mcp.service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -9,7 +9,7 @@ public abstract class BaseMcpService {
     protected Map<String, Object> newResult(String toolName, Object keyParam) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("tool", toolName);
-        result.put("timestamp", LocalDateTime.now().toString());
+        result.put("timestamp", Instant.now().toString());
         if (keyParam != null) {
             result.put("param", keyParam);
         }

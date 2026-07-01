@@ -10,4 +10,5 @@ import java.lang.annotation.Target;
 public @interface McpToolDef {
     String name();
     String description();
+    String[] optionalFields() default {};
 }

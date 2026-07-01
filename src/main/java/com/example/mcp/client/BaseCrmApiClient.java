@@ -1,7 +1,6 @@
 package com.example.mcp.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -10,6 +9,8 @@ import java.util.Map;
 
 /**
  * CRM API 客户端抽象基类，封装共享的 HTTP 配置、认证头和异常处理工具方法。
+ * <p>
+ * 配置值由子类通过 @Value 注入并传入，父类本身不是 Spring Bean。
  */
 public abstract class BaseCrmApiClient {
 
@@ -21,9 +22,9 @@ public abstract class BaseCrmApiClient {
 
     protected BaseCrmApiClient(HttpClient httpClient,
                                ObjectMapper objectMapper,
-                               @Value("${crm.api.base-url:https://api-crm.v-buy.com/uac}") String crmBaseUrl,
-                               @Value("${crm.api.auth-header-name:authorization}") String authHeaderName,
-                               @Value("${crm.api.auth-prefix:Bearer }") String authPrefix) {
+                               String crmBaseUrl,
+                               String authHeaderName,
+                               String authPrefix) {
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
         this.crmBaseUrl = crmBaseUrl;

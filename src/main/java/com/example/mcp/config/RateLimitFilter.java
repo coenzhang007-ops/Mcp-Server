@@ -13,9 +13,9 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Component
 @Order(1)
@@ -25,28 +25,24 @@ public class RateLimitFilter implements Filter {
     private static final int MAX_REQUESTS_PER_MINUTE = 60;
     private static final long WINDOW_MS = 60_000;
 
-    private final Map<String, AtomicInteger> counterMap = new ConcurrentHashMap<>();
-    private volatile long windowStart = System.currentTimeMillis();
+    private final ConcurrentHashMap<String, SlidingWindow> counterMap = new ConcurrentHashMap<>();
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         if (request instanceof HttpServletRequest httpRequest) {
-            long now = System.currentTimeMillis();
-            if (now - windowStart > WINDOW_MS) {
-                synchronized (this) {
-                    if (now - windowStart > WINDOW_MS) {
-                        counterMap.clear();
-                        windowStart = now;
-                    }
-                }
-            }
-
             String clientIp = getClientIp(httpRequest);
-            AtomicInteger count = counterMap.computeIfAbsent(clientIp, k -> new AtomicInteger(0));
+            long now = System.currentTimeMillis();
+            SlidingWindow window = counterMap.compute(clientIp, (k, v) -> {
+                if (v == null || now - v.windowStart() > WINDOW_MS) {
+                    return new SlidingWindow(now, new AtomicInteger(1));
+                }
+                return v;
+            });
 
-            if (count.incrementAndGet() > MAX_REQUESTS_PER_MINUTE) {
-                log.warn("Rate limit exceeded for IP: {}", clientIp);
+            if (window != null && window.windowStart() + WINDOW_MS > now
+                    && window.counter().incrementAndGet() - 1 > MAX_REQUESTS_PER_MINUTE) {
+                log.warn("Rate limit exceeded for IP: {}, count: {}", clientIp, window.counter().get());
                 HttpServletResponse httpResponse = (HttpServletResponse) response;
                 httpResponse.setStatus(429);
                 httpResponse.setContentType("application/json");
@@ -68,5 +64,11 @@ public class RateLimitFilter implements Filter {
             return xRealIp.trim();
         }
         return request.getRemoteAddr();
+    }
+
+    private record SlidingWindow(AtomicLong windowStart, AtomicInteger counter) {
+        long windowStart() {
+            return windowStart.get();
+        }
     }
 }
