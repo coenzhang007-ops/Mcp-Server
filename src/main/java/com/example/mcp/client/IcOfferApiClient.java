@@ -44,11 +44,6 @@ public class IcOfferApiClient {
 
     public Map<String, Object> queryIcOfferList(String partNo, int current, int size, String accessToken) {
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("crmBaseUrl", crmBaseUrl);
-        result.put("authHeaderName", authHeaderName);
-        result.put("authPrefix", authPrefix);
-        result.put("tokenProvided", accessToken != null && !accessToken.trim().isEmpty());
-        result.put("tokenLength", accessToken == null ? 0 : accessToken.trim().length());
 
         try {
             if (accessToken == null || accessToken.trim().isEmpty()) {
@@ -66,7 +61,6 @@ public class IcOfferApiClient {
             String safeToken = accessToken.trim();
             String encodedPartNo = URLEncoder.encode(partNo.trim(), StandardCharsets.UTF_8);
             String url = crmBaseUrl + "/customer/ic/offer/list?partNo=" + encodedPartNo + "&size=" + size + "&current=" + current;
-            result.put("requestUrl", url);
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -78,17 +72,14 @@ public class IcOfferApiClient {
 
             HttpResponse<byte[]> response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
             result.put("httpStatus", response.statusCode());
-            result.put("responseHeaders", response.headers().map());
 
             CrmResponseDecoder.DecodedBody decodedBody = CrmResponseDecoder.decode(response.body(), response.headers());
             String responseText = decodedBody.text();
-            result.put("decodeDiagnostics", decodedBody.diagnostics());
-            log.info("请求型号：{}, 响应结果：{}", partNo, responseText);
+            log.info("请求型号：{}, HTTP状态码：{}, 响应结果：{}", partNo, response.statusCode(), responseText);
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 result.put("success", false);
                 result.put("message", "CRM API request failed");
-                result.put("rawBody", responseText);
                 return result;
             }
 
@@ -97,7 +88,6 @@ public class IcOfferApiClient {
             result.put("code", root.path("code").asInt());
             result.put("msg", root.path("msg").asText());
             result.put("data", objectMapper.convertValue(root.path("data"), Object.class));
-            result.put("rawBody", responseText);
             return result;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

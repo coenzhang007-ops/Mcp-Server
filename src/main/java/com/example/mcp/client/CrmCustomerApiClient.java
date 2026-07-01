@@ -42,11 +42,6 @@ public class CrmCustomerApiClient {
 
     public Map<String, Object> queryCustomerInfo(String company, String accessToken) {
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("crmBaseUrl", crmBaseUrl);
-        result.put("authHeaderName", authHeaderName);
-        result.put("authPrefix", authPrefix);
-        result.put("tokenProvided", accessToken != null && !accessToken.trim().isEmpty());
-        result.put("tokenLength", accessToken == null ? 0 : accessToken.trim().length());
 
         try {
             if (accessToken == null || accessToken.trim().isEmpty()) {
@@ -58,7 +53,6 @@ public class CrmCustomerApiClient {
             String safeToken = accessToken.trim();
             String encodedCompany = URLEncoder.encode(company, StandardCharsets.UTF_8);
             String url = crmBaseUrl + "/manage/customer/mcp/info?company=" + encodedCompany;
-            result.put("requestUrl", url);
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -70,16 +64,13 @@ public class CrmCustomerApiClient {
 
             HttpResponse<byte[]> response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
             result.put("httpStatus", response.statusCode());
-            result.put("responseHeaders", response.headers().map());
 
             CrmResponseDecoder.DecodedBody decodedBody = CrmResponseDecoder.decode(response.body(), response.headers());
             String responseText = decodedBody.text();
-            result.put("decodeDiagnostics", decodedBody.diagnostics());
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 result.put("success", false);
                 result.put("message", "CRM API request failed");
-                result.put("rawBody", responseText);
                 return result;
             }
 
@@ -88,7 +79,6 @@ public class CrmCustomerApiClient {
             result.put("code", root.path("code").asInt());
             result.put("msg", root.path("msg").asText());
             result.put("data", objectMapper.convertValue(root.path("data"), Object.class));
-            result.put("rawBody", responseText);
             return result;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

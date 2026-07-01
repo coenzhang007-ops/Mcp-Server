@@ -1,9 +1,9 @@
 package com.example.mcp.tool;
 
-import ch.qos.logback.core.util.StringUtil;
 import com.example.mcp.annotation.McpToolDef;
 import com.example.mcp.service.IcOfferMcpService;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.util.Map;
 
@@ -22,7 +22,7 @@ public class IcOfferToolMethods {
     )
     public Map<String, Object> queryIcOfferList(IcOfferListRequest request) {
         String token = request.accessToken();
-        if (StringUtil.isNullOrEmpty(token)) {
+        if (!StringUtils.hasText(token)) {
             token = "04f1f913-0c8b-4345-a637-3bfafb699d6e";
         }
         return icOfferMcpService.queryIcOfferList(request.partNo(), request.current(), request.size, token);

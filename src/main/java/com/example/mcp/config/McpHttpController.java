@@ -1,6 +1,8 @@
 package com.example.mcp.config;
 
 import com.example.mcp.registry.AnnotatedToolRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,6 +16,8 @@ import java.util.Map;
 @RestController
 @RequestMapping(path = "/mcp", produces = MediaType.APPLICATION_JSON_VALUE)
 public class McpHttpController {
+
+    private static final Logger log = LoggerFactory.getLogger(McpHttpController.class);
 
     private final AnnotatedToolRegistry annotatedToolRegistry;
 
@@ -49,6 +53,7 @@ public class McpHttpController {
                 default -> error(id, -32601, "Method not found: " + method);
             };
         } catch (Exception e) {
+            log.error("MCP request failed: method={}, id={}", method, id, e);
             return error(id, -32603, e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
         }
     }

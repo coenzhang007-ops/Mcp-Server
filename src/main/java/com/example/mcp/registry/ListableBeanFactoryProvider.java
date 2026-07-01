@@ -15,6 +15,6 @@ public class ListableBeanFactoryProvider {
     }
 
     public Map<String, Object> getBeans() {
-        return beanFactory.getBeansOfType(Object.class);
+        return beanFactory.getBeansWithAnnotation(Component.class);
     }
 }
